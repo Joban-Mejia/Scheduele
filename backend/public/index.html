@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>HorarioComún</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🗓️%3C/text%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="app-header">
+        <h1>🗓️ HorarioComún</h1>
+        <p class="tagline">Cruzá los horarios del grupo y encontrá los huecos libres que tienen todos en común.</p>
+      </header>
+
+      <!-- ─────────── Pantalla 1: inicio ─────────── -->
+      <section id="pantalla-inicio">
+        <div class="card">
+          <h2>Crear una sala</h2>
+          <p class="muted">Genera un código para compartir con el grupo.</p>
+          <button id="btn-crear" class="btn-primario">Crear sala</button>
+        </div>
+
+        <div class="card">
+          <h2>Unirse a una sala</h2>
+          <form id="form-unirse">
+            <label for="input-codigo">Código de la sala</label>
+            <input
+              id="input-codigo"
+              type="text"
+              inputmode="latin"
+              autocomplete="off"
+              autocapitalize="characters"
+              spellcheck="false"
+              maxlength="10"
+              placeholder="Ej. TCXRPK"
+            />
+            <button type="submit" class="btn-primario">Entrar</button>
+          </form>
+        </div>
+
+        <p id="error-inicio" class="error" hidden></p>
+      </section>
+
+      <!-- ─────────── Pantalla 2: sala ─────────── -->
+      <section id="pantalla-sala" hidden>
+        <div class="sala-barra">
+          <div class="sala-codigo-wrap">
+            <span class="muted">Sala</span>
+            <strong id="sala-codigo" class="sala-codigo"></strong>
+          </div>
+          <div class="sala-acciones">
+            <button id="btn-copiar" class="btn-chico">Copiar link</button>
+            <button id="btn-salir" class="btn-chico btn-fantasma">Salir</button>
+          </div>
+        </div>
+
+        <div class="card" id="card-horario">
+          <h2>Tu horario</h2>
+          <form id="form-horario">
+            <label for="input-alias">Tu alias</label>
+            <input id="input-alias" type="text" maxlength="40" autocomplete="off" placeholder="Cómo te van a ver" required />
+
+            <label for="input-imagen">Captura de tu horario semanal</label>
+            <input id="input-imagen" type="file" accept="image/jpeg,image/png,image/webp" required />
+            <p class="hint">JPG, PNG o WEBP. Máximo 8 MB. Que se lean bien las horas y los días.</p>
+
+            <button type="submit" id="btn-subir" class="btn-primario">Subir horario</button>
+          </form>
+          <p id="estado-subida" class="hint estado" hidden></p>
+          <p id="error-subida" class="error" hidden></p>
+        </div>
+
+        <div class="card">
+          <h2>Participantes <span id="conteo" class="pill">0</span></h2>
+          <ul id="lista-participantes" class="participantes">
+            <li class="muted">Todavía no subió nadie.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h2>Horarios libres en común</h2>
+          <p id="aviso-grilla" class="hint"></p>
+          <div class="grilla-wrap">
+            <table id="grilla" class="grilla"></table>
+          </div>
+          <p class="leyenda"><span class="muestra libre"></span> Todos libres</p>
+        </div>
+      </section>
+
+      <footer class="app-footer">
+        <p class="muted">El estado vive en memoria del servidor y la sala se borra tras unas horas de inactividad.</p>
+      </footer>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
