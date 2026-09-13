@@ -33,6 +33,13 @@ export interface GridLibre {
   participantes: string[];
   /** true cuando hay 2+ participantes con horario cargado. */
   suficientesParticipantes: boolean;
+  /**
+   * Por cada día: un número por slot (mismo orden que al iterar el rango con
+   * `granularidadMin`) con la cantidad de participantes que tienen clase en
+   * ese slot. Sirve para mostrar "cuántos tienen clase acá" además de los
+   * huecos en común.
+   */
+  ocupacion: Record<string, number[]>;
 }
 
 export interface BloqueDescartado {
@@ -178,11 +185,15 @@ export function interseccionLibre(
   });
 
   const dias: Record<string, BloqueLibre[]> = {};
+  const ocupacion: Record<string, number[]> = {};
 
   // Sin participantes no hay nada que intersecar: todos los días vacíos.
   if (participantes.length === 0) {
-    for (const dia of config.dias) dias[dia] = [];
-    return { dias, config, participantes: [], suficientesParticipantes: false };
+    for (const dia of config.dias) {
+      dias[dia] = [];
+      ocupacion[dia] = slots.map(() => 0);
+    }
+    return { dias, config, participantes: [], suficientesParticipantes: false, ocupacion };
   }
 
   for (const dia of config.dias) {
@@ -193,6 +204,10 @@ export function interseccionLibre(
       inicio: toHHMM(b.inicio),
       fin: toHHMM(b.fin),
     }));
+
+    ocupacion[dia] = slots.map(
+      (slot) => ocupadosPorParticipante.filter((porDia) => !slotLibre(slot, porDia[dia] ?? [])).length,
+    );
   }
 
   return {
@@ -200,5 +215,68 @@ export function interseccionLibre(
     config,
     participantes: participantes.map((p) => p.alias),
     suficientesParticipantes: participantes.length >= 2,
+    ocupacion,
   };
+}
+
+// ── Grilla editable (preview antes de confirmar la subida) ──────────
+
+/**
+ * Para UN horario ya extraído, indica por cada slot de la grilla si está
+ * ocupado (true) o libre (false). Se usa para mostrar la pantalla de
+ * confirmación "por cuadraditos" antes de guardar el horario.
+ */
+export function ocupacionSlots(
+  horario: HorarioEstructurado,
+  config: GridConfig,
+): Record<string, boolean[]> {
+  const slots = slotsDelRango(config);
+  const out: Record<string, boolean[]> = {};
+  for (const dia of config.dias) {
+    const ocupados = ocupadosEnDia(horario, dia);
+    out[dia] = slots.map((slot) => !slotLibre(slot, ocupados));
+  }
+  return out;
+}
+
+/**
+ * Inversa de `ocupacionSlots`: reconstruye un horario (bloques por día) a
+ * partir de la grilla de booleans que edita el usuario en la pantalla de
+ * confirmación (clickeando cuadraditos para sacar o agregar clases).
+ * Los slots ocupados consecutivos se fusionan en un solo bloque.
+ */
+export function bloquesDesdeOcupacion(
+  ocupacion: Record<string, boolean[]>,
+  config: GridConfig,
+): HorarioEstructurado {
+  const slots = slotsDelRango(config);
+  const dias: Record<string, Bloque[]> = {};
+
+  for (const dia of config.dias) {
+    const flags = ocupacion[dia] ?? [];
+    const bloques: Bloque[] = [];
+    let inicioAbierto: number | null = null;
+
+    for (let i = 0; i < slots.length; i++) {
+      const ocupado = Boolean(flags[i]);
+      if (ocupado && inicioAbierto === null) {
+        inicioAbierto = slots[i]!.inicio;
+      }
+      if (!ocupado && inicioAbierto !== null) {
+        bloques.push({ inicio: toHHMM(inicioAbierto), fin: toHHMM(slots[i]!.inicio), actividad: "Ocupado" });
+        inicioAbierto = null;
+      }
+    }
+    if (inicioAbierto !== null) {
+      bloques.push({
+        inicio: toHHMM(inicioAbierto),
+        fin: toHHMM(slots[slots.length - 1]!.fin),
+        actividad: "Ocupado",
+      });
+    }
+
+    dias[dia] = bloques;
+  }
+
+  return { dias };
 }
