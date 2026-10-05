@@ -67,10 +67,30 @@
             <input id="input-imagen" type="file" accept="image/jpeg,image/png,image/webp" required />
             <p class="hint">JPG, PNG o WEBP. Máximo 8 MB. Que se lean bien las horas y los días.</p>
 
-            <button type="submit" id="btn-subir" class="btn-primario">Subir horario</button>
+            <button type="submit" id="btn-subir" class="btn-primario">Analizar horario</button>
           </form>
           <p id="estado-subida" class="hint estado" hidden></p>
           <p id="error-subida" class="error" hidden></p>
+        </div>
+
+        <!-- ─── Confirmación "por cuadraditos" antes de guardar ─── -->
+        <div class="card" id="card-confirmar" hidden>
+          <h2>Confirmá tu horario</h2>
+          <p class="hint">
+            Así lo leyó Chat. Tocá un cuadradito para cambiarlo: verde = tenés clase, vacío = hueco libre.
+          </p>
+          <div class="grilla-wrap">
+            <table id="grilla-confirmar" class="grilla grilla-confirmar"></table>
+          </div>
+          <p class="leyenda">
+            <span class="muestra ocupado"></span> Tenés clase
+            <span class="muestra libre-muestra"></span> Hueco libre
+          </p>
+          <div class="confirmar-acciones">
+            <button id="btn-confirmar" class="btn-primario">Listo, guardar mi horario</button>
+            <button id="btn-cancelar-confirmar" class="btn-chico btn-fantasma">Cancelar</button>
+          </div>
+          <p id="error-confirmar" class="error" hidden></p>
         </div>
 
         <div class="card">
@@ -86,7 +106,8 @@
           <div class="grilla-wrap">
             <table id="grilla" class="grilla"></table>
           </div>
-          <p class="leyenda"><span class="muestra libre"></span> Todos libres</p>
+          <p class="leyenda"><span class="muestra libre-muestra"></span> Vacío = nadie tiene clase ahí</p>
+          <p class="leyenda"><span class="muestra degradado"></span> Mientras más morado, más gente tiene clase (el número es la cantidad exacta)</p>
         </div>
       </section>
 

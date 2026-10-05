@@ -8,6 +8,8 @@
   --primario-hover: #4338ca;
   --libre: #34d399;
   --libre-borde: #10b981;
+  --ocupado: #f97316;
+  --ocupado-borde: #c2410c;
   --error-bg: #fef2f2;
   --error-texto: #b91c1c;
   --radio: 14px;
@@ -25,6 +27,8 @@
     --primario-hover: #7d78f5;
     --libre: #34d399;
     --libre-borde: #10b981;
+    --ocupado: #fb923c;
+    --ocupado-borde: #ea580c;
     --error-bg: #3a1a1a;
     --error-texto: #fca5a5;
   }
@@ -273,11 +277,7 @@ button {
 .grilla td {
   height: 22px;
   min-width: 44px;
-}
-
-.grilla td.libre {
-  background: var(--libre);
-  box-shadow: inset 0 0 0 1px var(--libre-borde);
+  transition: background-color 0.1s;
 }
 
 .grilla tr.enpunto th.hora {
@@ -287,6 +287,49 @@ button {
 
 .grilla tr.enpunto td {
   border-top-color: var(--muted);
+}
+
+/* Número de gente con clase en ese slot: 0 = vacío/libre, y sube junto con
+   la intensidad del morado de fondo (ver colorOcupacion() en app.js). */
+.grilla td .conteo {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+/* Cuando el morado de fondo es muy intenso, el número se lee mejor en blanco. */
+.grilla td.texto-claro .conteo {
+  color: #fff;
+}
+
+/* ── Grilla de confirmación (clickeable, "por cuadraditos") ── */
+.grilla-confirmar td {
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.1s;
+}
+
+.grilla-confirmar td.ocupado {
+  background: var(--ocupado, #f97316);
+  box-shadow: inset 0 0 0 1px var(--ocupado-borde, #c2410c);
+}
+
+.grilla-confirmar td:hover {
+  outline: 2px solid var(--primario);
+  outline-offset: -2px;
+}
+
+.confirmar-acciones {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 14px;
+}
+
+.confirmar-acciones .btn-primario {
+  margin-top: 0;
+  flex: 1;
 }
 
 .leyenda {
@@ -305,9 +348,21 @@ button {
   border-radius: 4px;
 }
 
-.muestra.libre {
-  background: var(--libre);
-  box-shadow: inset 0 0 0 1px var(--libre-borde);
+.muestra.ocupado {
+  background: var(--ocupado);
+  box-shadow: inset 0 0 0 1px var(--ocupado-borde);
+}
+
+.muestra.libre-muestra {
+  background: var(--card);
+  box-shadow: inset 0 0 0 1px var(--borde);
+}
+
+/* Barrita de muestra del degradado morado usado en la grilla de todos. */
+.muestra.degradado {
+  width: 46px;
+  background: linear-gradient(90deg, rgba(124, 58, 237, 0.16), rgba(124, 58, 237, 1));
+  box-shadow: inset 0 0 0 1px var(--borde);
 }
 
 .app-footer {

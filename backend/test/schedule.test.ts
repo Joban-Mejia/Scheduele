@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { GridConfig } from "../src/config";
 import {
+  bloquesDesdeOcupacion,
   fusionarIntervalos,
   interseccionLibre,
   normalizarBloques,
+  ocupacionSlots,
   ocupadosEnDia,
   seSolapan,
   slotLibre,
@@ -281,5 +283,53 @@ describe("interseccionLibre", () => {
       cfg({ dias: ["lunes"] }),
     );
     expect(Object.keys(g.dias)).toEqual(["lunes"]);
+  });
+
+  it("incluye ocupacion: cuenta cuántos participantes tienen clase en cada slot", () => {
+    const g = interseccionLibre(
+      [
+        participante("ana", { lunes: [b("08:00", "09:00")] }),
+        participante("beto", { lunes: [b("08:30", "09:30")] }),
+      ],
+      cfg({ granularidadMin: 30, rangoInicio: "08:00", rangoFin: "10:00" }),
+    );
+    // slots: 08:00-08:30 (solo ana), 08:30-09:00 (ambos), 09:00-09:30 (solo beto), 09:30-10:00 (nadie)
+    expect(g.ocupacion.lunes).toEqual([1, 2, 1, 0]);
+  });
+
+  it("ocupacion con 0 participantes es todo ceros", () => {
+    const g = interseccionLibre([], cfg({ granularidadMin: 60, rangoInicio: "08:00", rangoFin: "10:00" }));
+    expect(g.ocupacion.lunes).toEqual([0, 0]);
+  });
+});
+
+// ── ocupacionSlots / bloquesDesdeOcupacion (grilla editable) ─────────
+describe("ocupacionSlots y bloquesDesdeOcupacion", () => {
+  const c = cfg({ granularidadMin: 30, rangoInicio: "08:00", rangoFin: "10:00", dias: ["lunes", "martes"] });
+
+  it("ocupacionSlots marca true los slots que se solapan con algún bloque", () => {
+    const horario: HorarioEstructurado = { dias: { lunes: [b("08:30", "09:30")] } };
+    const oc = ocupacionSlots(horario, c);
+    expect(oc.lunes).toEqual([false, true, true, false]);
+    expect(oc.martes).toEqual([false, false, false, false]);
+  });
+
+  it("bloquesDesdeOcupacion reconstruye y fusiona slots ocupados consecutivos", () => {
+    const horario = bloquesDesdeOcupacion({ lunes: [false, true, true, false], martes: [true, true, true, true] }, c);
+    expect(horario.dias.lunes).toEqual([{ inicio: "08:30", fin: "09:30", actividad: "Ocupado" }]);
+    expect(horario.dias.martes).toEqual([{ inicio: "08:00", fin: "10:00", actividad: "Ocupado" }]);
+  });
+
+  it("son inversas entre sí (round-trip) para una grilla arbitraria", () => {
+    const flags = { lunes: [true, false, true, false], martes: [false, false, true, true] };
+    const horario = bloquesDesdeOcupacion(flags, c);
+    const vueltaAOcupacion = ocupacionSlots(horario, c);
+    expect(vueltaAOcupacion).toEqual(flags);
+  });
+
+  it("bloquesDesdeOcupacion con todo en false no genera bloques", () => {
+    const horario = bloquesDesdeOcupacion({ lunes: [false, false, false, false], martes: [false, false, false, false] }, c);
+    expect(horario.dias.lunes).toEqual([]);
+    expect(horario.dias.martes).toEqual([]);
   });
 });
